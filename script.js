@@ -1,264 +1,145 @@
+/**
+ * Spotlight Music Events App - Frontend JavaScript
+ * Connects to backend API (server.js)
+ */
+
 // ================================
-// MOCK DATA
+// CONFIGURATION
 // ================================
-const mockEvents = [
-    {
-        id: 1,
-        name: "Blues Night Open Mic",
-        city: "Nashville",
-        state: "TN",
-        date: "2025-10-20",
-        time: "19:00",
-        type: "Open Mic",
-        genre: "Jazz",
-        email: "blues@harmonycafe.com",
-        phone: "(615) 555-0123",
-        website: "https://harmonycafe.com",
-        description: "Weekly blues and jazz open mic night. Bring your instrument and join our house band for an unforgettable evening."
-    },
-    {
-        id: 2,
-        name: "Rock Showcase Weekend",
-        city: "Austin",
-        state: "TX",
-        date: "2025-10-22",
-        time: "20:00",
-        type: "Showcase",
-        genre: "Rock",
-        email: "bookings@rockhaus.com",
-        phone: "(512) 555-0456",
-        website: "https://rockhaus.com",
-        description: "Three nights of the best local rock bands. Submit your demo for a chance to open for national touring acts."
-    },
-    {
-        id: 3,
-        name: "Acoustic Sunday Sessions",
-        city: "Portland",
-        state: "OR",
-        date: "2025-10-25",
-        time: "14:00",
-        type: "Open Mic",
-        genre: "Acoustic",
-        email: "info@coffeegrove.com",
-        phone: "(503) 555-0789",
-        website: "https://coffeegrove.com",
-        description: "Relaxed afternoon acoustic sessions in our cozy cafe. Perfect for singer-songwriters and solo artists."
-    },
-    {
-        id: 4,
-        name: "Hip-Hop Cypher Night",
-        city: "Atlanta",
-        state: "GA",
-        date: "2025-10-23",
-        time: "21:00",
-        type: "Jam Session",
-        genre: "Hip-Hop",
-        email: "beats@urbanlounge.com",
-        phone: "(404) 555-0234",
-        website: "https://urbanlounge.com",
-        description: "Freestyle battles, live beats, and networking for hip-hop artists. DJ and sound engineer on site."
-    },
-    {
-        id: 5,
-        name: "Country Nights at The Barn",
-        city: "Nashville",
-        state: "TN",
-        date: "2025-10-26",
-        time: "18:30",
-        type: "Gig Night",
-        genre: "Country",
-        email: "events@thebarnvenue.com",
-        phone: "(615) 555-0567",
-        website: "https://thebarnvenue.com",
-        description: "Looking for country and bluegrass acts. Pay per performance. Full PA system and stage lighting provided."
-    },
-    {
-        id: 6,
-        name: "Jazz Jam at Blue Note",
-        city: "New York",
-        state: "NY",
-        date: "2025-10-24",
-        time: "22:00",
-        type: "Jam Session",
-        genre: "Jazz",
-        email: "info@bluenote.com",
-        phone: "(212) 555-0890",
-        website: "https://bluenote.com",
-        description: "Late night jazz jam with professional musicians. All skill levels welcome. House trio provides backing."
-    },
-    {
-        id: 7,
-        name: "Indie Pop Showcase",
-        city: "Los Angeles",
-        state: "CA",
-        date: "2025-10-28",
-        time: "19:30",
-        type: "Showcase",
-        genre: "Pop",
-        email: "bookings@echoclub.com",
-        phone: "(323) 555-0123",
-        website: "https://echoclub.com",
-        description: "Monthly indie pop showcase featuring emerging artists. Industry professionals in attendance."
-    },
-    {
-        id: 8,
-        name: "Open Mic Mondays",
-        city: "Seattle",
-        state: "WA",
-        date: "2025-10-27",
-        time: "19:00",
-        type: "Open Mic",
-        genre: "Acoustic",
-        email: "openmic@greenlightcafe.com",
-        phone: "(206) 555-0345",
-        website: "https://greenlightcafe.com",
-        description: "All genres welcome. Sign up starts at 6 PM. 15-minute slots available. Full backline provided."
-    },
-    {
-        id: 9,
-        name: "Rock Battle of the Bands",
-        city: "Chicago",
-        state: "IL",
-        date: "2025-10-29",
-        time: "20:00",
-        type: "Gig Night",
-        genre: "Rock",
-        email: "compete@metroclub.com",
-        phone: "(312) 555-0678",
-        website: "https://metroclub.com",
-        description: "Monthly battle competition with cash prizes. Winner gets studio time and promotional package."
-    },
-    {
-        id: 10,
-        name: "Songwriter Circle",
-        city: "Denver",
-        state: "CO",
-        date: "2025-10-30",
-        time: "18:00",
-        type: "Open Mic",
-        genre: "Acoustic",
-        email: "songs@listenerinc.com",
-        phone: "(303) 555-0901",
-        website: "https://listenerinc.com",
-        description: "Intimate songwriter-focused event. Share your original material in a supportive environment."
-    },
-    {
-        id: 11,
-        name: "Electronic Music Night",
-        city: "Miami",
-        state: "FL",
-        date: "2025-10-31",
-        time: "22:00",
-        type: "Showcase",
-        genre: "Pop",
-        email: "dj@neonwave.com",
-        phone: "(305) 555-0234",
-        website: "https://neonwave.com",
-        description: "Electronic producers and live performers wanted. Full lighting rig and professional sound system."
-    },
-    {
-        id: 12,
-        name: "Thursday Jazz Lounge",
-        city: "San Francisco",
-        state: "CA",
-        date: "2025-10-23",
-        time: "20:30",
-        type: "Gig Night",
-        genre: "Jazz",
-        email: "booking@jazzcellar.com",
-        phone: "(415) 555-0567",
-        website: "https://jazzcellar.com",
-        description: "Seeking jazz trios and quartets for weekly residency. Paid gigs with potential for return bookings."
-    },
-    {
-        id: 13,
-        name: "Folk & Americana Festival",
-        city: "Asheville",
-        state: "NC",
-        date: "2025-11-02",
-        time: "12:00",
-        type: "Showcase",
-        genre: "Country",
-        email: "festival@mountainmusic.com",
-        phone: "(828) 555-0890",
-        website: "https://mountainmusic.com",
-        description: "All-day outdoor festival featuring folk, americana, and roots music. Multiple stages and vendors."
-    },
-    {
-        id: 14,
-        name: "Hip-Hop Open Stage",
-        city: "Philadelphia",
-        state: "PA",
-        date: "2025-10-26",
-        time: "21:00",
-        type: "Open Mic",
-        genre: "Hip-Hop",
-        email: "stage@undergroundphilly.com",
-        phone: "(215) 555-0123",
-        website: "https://undergroundphilly.com",
-        description: "Underground hip-hop venue. Bring your A-game. Live DJ, professional sound, and enthusiastic crowd."
-    },
-    {
-        id: 15,
-        name: "Sunday Soul Sessions",
-        city: "Detroit",
-        state: "MI",
-        date: "2025-10-26",
-        time: "17:00",
-        type: "Jam Session",
-        genre: "Jazz",
-        email: "soul@motown-live.com",
-        phone: "(313) 555-0456",
-        website: "https://motown-live.com",
-        description: "Soul, R&B, and funk jam session. House band backs vocalists and instrumentalists. All welcome."
-    }
-];
+const API_URL = window.location.origin; // Uses same origin as frontend
+const API_ENDPOINTS = {
+    events: `${API_URL}/api/events`,
+    stats: `${API_URL}/api/stats`,
+    health: `${API_URL}/api/health`,
+};
 
 // ================================
 // GLOBAL STATE
 // ================================
 let allEvents = [];
 let filteredEvents = [];
+let isLoading = false;
 
 // ================================
 // INITIALIZATION
 // ================================
 document.addEventListener('DOMContentLoaded', () => {
-    initializeApp();
+    console.log('🎵 Spotlight initializing...');
     setupEventListeners();
-    loadEventsFromStorage();
-    performInitialSearch();
+    loadEvents();
+    checkAPIHealth();
 });
 
-function initializeApp() {
-    // Merge mock data with any stored events
-    const storedEvents = getStoredEvents();
-    allEvents = [...mockEvents, ...storedEvents];
-    filteredEvents = [...allEvents];
+// ================================
+// API HEALTH CHECK
+// ================================
+async function checkAPIHealth() {
+    try {
+        const response = await fetch(API_ENDPOINTS.health);
+        const data = await response.json();
+        console.log('✅ API Health:', data.status);
+    } catch (error) {
+        console.error('❌ API Health Check Failed:', error);
+        showToast('Warning: Could not connect to backend API', 'warning');
+    }
 }
 
 // ================================
-// LOCAL STORAGE MANAGEMENT
+// API FUNCTIONS
 // ================================
-function getStoredEvents() {
-    const stored = localStorage.getItem('customEvents');
-    return stored ? JSON.parse(stored) : [];
+
+/**
+ * Fetch all events from API with optional filters
+ */
+async function loadEvents(filters = {}) {
+    if (isLoading) return;
+    
+    try {
+        isLoading = true;
+        showLoading();
+        
+        // Build query string from filters
+        const queryParams = new URLSearchParams();
+        if (filters.city) queryParams.append('city', filters.city);
+        if (filters.state) queryParams.append('state', filters.state);
+        if (filters.type) queryParams.append('type', filters.type);
+        if (filters.genre) queryParams.append('genre', filters.genre);
+        if (filters.search) queryParams.append('search', filters.search);
+        if (filters.date_from) queryParams.append('date_from', filters.date_from);
+        if (filters.date_to) queryParams.append('date_to', filters.date_to);
+        
+        const url = `${API_ENDPOINTS.events}${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            allEvents = data.events || [];
+            filteredEvents = [...allEvents];
+            console.log(`✅ Loaded ${allEvents.length} events from API`);
+            renderEvents(filteredEvents);
+        } else {
+            throw new Error(data.error || 'Failed to load events');
+        }
+        
+    } catch (error) {
+        console.error('Error loading events:', error);
+        showToast('Failed to load events. Please try again.', 'error');
+        hideLoading();
+        showNoResults();
+    } finally {
+        isLoading = false;
+    }
 }
 
-function saveEventToStorage(event) {
-    const stored = getStoredEvents();
-    const newEvent = {
-        ...event,
-        id: Date.now() // Generate unique ID
-    };
-    stored.push(newEvent);
-    localStorage.setItem('customEvents', JSON.stringify(stored));
-    return newEvent;
+/**
+ * Create a new event via API
+ */
+async function createEvent(eventData) {
+    try {
+        const response = await fetch(API_ENDPOINTS.events, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(eventData),
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Failed to create event');
+        }
+        
+        console.log('✅ Event created:', data.event);
+        return data.event;
+        
+    } catch (error) {
+        console.error('Error creating event:', error);
+        throw error;
+    }
 }
 
-function loadEventsFromStorage() {
-    const storedEvents = getStoredEvents();
-    allEvents = [...mockEvents, ...storedEvents];
+/**
+ * Get event statistics from API
+ */
+async function loadStats() {
+    try {
+        const response = await fetch(API_ENDPOINTS.stats);
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('📊 Stats:', data.stats);
+            return data.stats;
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
 }
 
 // ================================
@@ -275,34 +156,53 @@ function setupEventListeners() {
     const genreFilter = document.getElementById('genreFilter');
     const sortFilter = document.getElementById('sortFilter');
     
-    searchBtn.addEventListener('click', performSearch);
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') performSearch();
-    });
+    if (searchBtn) {
+        searchBtn.addEventListener('click', performSearch);
+    }
     
-    typeFilter.addEventListener('change', performSearch);
-    genreFilter.addEventListener('change', performSearch);
-    sortFilter.addEventListener('change', performSearch);
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+    }
+    
+    if (typeFilter) {
+        typeFilter.addEventListener('change', performSearch);
+    }
+    
+    if (genreFilter) {
+        genreFilter.addEventListener('change', performSearch);
+    }
+    
+    if (sortFilter) {
+        sortFilter.addEventListener('change', () => {
+            sortEvents(filteredEvents, sortFilter.value);
+            renderEvents(filteredEvents);
+        });
+    }
     
     // Form submission
     const submitForm = document.getElementById('submitForm');
-    submitForm.addEventListener('submit', handleFormSubmit);
+    if (submitForm) {
+        submitForm.addEventListener('submit', handleFormSubmit);
+    }
     
     // Hamburger menu
     const hamburger = document.getElementById('hamburger');
     const navLinks = document.getElementById('navLinks');
     
-    hamburger.addEventListener('click', () => {
-        hamburger.classList.toggle('active');
-        navLinks.classList.toggle('active');
-    });
+    if (hamburger && navLinks) {
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+    }
 }
 
 function setupNavigation() {
     const navLinksElements = document.querySelectorAll('.nav-link');
     const navLinksContainer = document.getElementById('navLinks');
     
-    // Smooth scroll and active state
     navLinksElements.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -311,14 +211,16 @@ function setupNavigation() {
             
             if (targetSection) {
                 targetSection.scrollIntoView({ behavior: 'smooth' });
-                
-                // Update active state
                 navLinksElements.forEach(l => l.classList.remove('active'));
                 link.classList.add('active');
                 
-                // Close mobile menu
-                navLinksContainer.classList.remove('active');
-                document.getElementById('hamburger').classList.remove('active');
+                if (navLinksContainer) {
+                    navLinksContainer.classList.remove('active');
+                }
+                const hamburger = document.getElementById('hamburger');
+                if (hamburger) {
+                    hamburger.classList.remove('active');
+                }
             }
         });
     });
@@ -330,7 +232,6 @@ function setupNavigation() {
         
         sections.forEach(section => {
             const sectionTop = section.offsetTop;
-            const sectionHeight = section.clientHeight;
             if (window.pageYOffset >= sectionTop - 200) {
                 current = section.getAttribute('id');
             }
@@ -346,46 +247,29 @@ function setupNavigation() {
 }
 
 // ================================
-// SEARCH & FILTER FUNCTIONS
+// SEARCH & FILTER
 // ================================
-function performInitialSearch() {
-    // Show all events on load
-    renderEvents(allEvents);
-}
-
 function performSearch() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const typeFilter = document.getElementById('typeFilter').value;
-    const genreFilter = document.getElementById('genreFilter').value;
-    const sortOption = document.getElementById('sortFilter').value;
+    const searchInput = document.getElementById('searchInput');
+    const typeFilter = document.getElementById('typeFilter');
+    const genreFilter = document.getElementById('genreFilter');
     
-    // Show loading animation
-    showLoading();
+    // Build filters object
+    const filters = {
+        search: searchInput ? searchInput.value.trim() : '',
+        type: typeFilter ? typeFilter.value : '',
+        genre: genreFilter ? genreFilter.value : '',
+    };
     
-    // Simulate search delay for better UX
-    setTimeout(() => {
-        // Filter events
-        filteredEvents = allEvents.filter(event => {
-            const matchesSearch = 
-                event.name.toLowerCase().includes(searchTerm) ||
-                event.city.toLowerCase().includes(searchTerm) ||
-                event.state.toLowerCase().includes(searchTerm) ||
-                event.genre.toLowerCase().includes(searchTerm) ||
-                event.description.toLowerCase().includes(searchTerm);
-            
-            const matchesType = !typeFilter || event.type === typeFilter;
-            const matchesGenre = !genreFilter || event.genre === genreFilter;
-            
-            return matchesSearch && matchesType && matchesGenre;
-        });
-        
-        // Sort events
-        sortEvents(filteredEvents, sortOption);
-        
-        // Render results
-        hideLoading();
-        renderEvents(filteredEvents);
-    }, 800);
+    // Remove empty filters
+    Object.keys(filters).forEach(key => {
+        if (!filters[key]) delete filters[key];
+    });
+    
+    console.log('🔍 Searching with filters:', filters);
+    
+    // Reload events with filters from API
+    loadEvents(filters);
 }
 
 function sortEvents(events, sortOption) {
@@ -410,15 +294,22 @@ function renderEvents(events) {
     const resultsGrid = document.getElementById('resultsGrid');
     const noResults = document.getElementById('noResults');
     
+    if (!resultsGrid) return;
+    
     resultsGrid.innerHTML = '';
+    hideLoading();
     
     if (events.length === 0) {
         resultsGrid.style.display = 'none';
-        noResults.classList.add('active');
+        if (noResults) {
+            noResults.classList.add('active');
+        }
         return;
     }
     
-    noResults.classList.remove('active');
+    if (noResults) {
+        noResults.classList.remove('active');
+    }
     resultsGrid.style.display = 'grid';
     
     events.forEach(event => {
@@ -432,7 +323,7 @@ function createEventCard(event) {
     card.className = 'event-card';
     
     const formattedDate = formatDate(event.date);
-    const formattedTime = formatTime(event.time);
+    const formattedTime = event.time ? formatTime(event.time) : 'Time TBA';
     
     card.innerHTML = `
         <div class="event-header">
@@ -447,17 +338,19 @@ function createEventCard(event) {
         
         <p class="event-date">🗓 ${formattedDate} at ${formattedTime}</p>
         
-        <p class="event-description">${escapeHtml(event.description)}</p>
+        ${event.description ? `<p class="event-description">${escapeHtml(event.description)}</p>` : ''}
         
         <div class="event-contact">
-            <div>📧 <a href="mailto:${escapeHtml(event.email)}">${escapeHtml(event.email)}</a></div>
-            ${event.phone ? `<div>📞 ${escapeHtml(event.phone)}</div>` : ''}
+            ${event.contact_email ? `<div>📧 <a href="mailto:${escapeHtml(event.contact_email)}">${escapeHtml(event.contact_email)}</a></div>` : ''}
+            ${event.contact_phone ? `<div>📞 ${escapeHtml(event.contact_phone)}</div>` : ''}
         </div>
         
         <div class="event-actions">
-            <button class="btn btn-secondary btn-small" onclick="contactVenue('${escapeHtml(event.email)}')">
-                Contact Venue
-            </button>
+            ${event.contact_email ? `
+                <button class="btn btn-secondary btn-small" onclick="contactVenue('${escapeHtml(event.contact_email)}')">
+                    Contact Venue
+                </button>
+            ` : ''}
             ${event.website ? `
                 <button class="btn btn-primary btn-small" onclick="visitWebsite('${escapeHtml(event.website)}')">
                     Visit Website
@@ -472,96 +365,136 @@ function createEventCard(event) {
 // ================================
 // FORM HANDLING
 // ================================
-function handleFormSubmit(e) {
+async function handleFormSubmit(e) {
     e.preventDefault();
     
     const formData = {
         name: document.getElementById('eventName').value,
+        venue_name: document.getElementById('city').value, // Using venue field
         city: document.getElementById('city').value,
         state: document.getElementById('state').value,
         date: document.getElementById('eventDate').value,
         time: document.getElementById('eventTime').value,
         type: document.getElementById('eventType').value,
         genre: document.getElementById('eventGenre').value,
-        email: document.getElementById('email').value,
-        phone: document.getElementById('phone').value,
+        contact_email: document.getElementById('email').value,
+        contact_phone: document.getElementById('phone').value,
         website: document.getElementById('website').value,
-        description: document.getElementById('description').value
+        description: document.getElementById('description').value,
     };
     
-    // Validate form
-    if (!validateForm(formData)) {
-        return;
+    try {
+        // Show loading state
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+        
+        // Create event via API
+        const newEvent = await createEvent(formData);
+        
+        // Show success message
+        showSuccessMessage();
+        
+        // Reset form
+        document.getElementById('submitForm').reset();
+        
+        // Reload events to show new event
+        await loadEvents();
+        
+        // Scroll to search section
+        document.getElementById('search').scrollIntoView({ behavior: 'smooth' });
+        
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        
+    } catch (error) {
+        console.error('Error submitting event:', error);
+        showToast('Failed to submit event: ' + error.message, 'error');
+        
+        // Re-enable button
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Event';
     }
-    
-    // Save to storage
-    const newEvent = saveEventToStorage(formData);
-    
-    // Add to current events array
-    allEvents.push(newEvent);
-    
-    // Show success message
-    showSuccessMessage();
-    
-    // Reset form
-    document.getElementById('submitForm').reset();
-    
-    // Refresh search results if on search section
-    performSearch();
-}
-
-function validateForm(data) {
-    // Check required fields
-    const requiredFields = ['name', 'city', 'state', 'date', 'time', 'type', 'genre', 'email', 'description'];
-    
-    for (let field of requiredFields) {
-        if (!data[field] || data[field].trim() === '') {
-            alert(`Please fill in the ${field} field`);
-            return false;
-        }
-    }
-    
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.email)) {
-        alert('Please enter a valid email address');
-        return false;
-    }
-    
-    // Validate website if provided
-    if (data.website && data.website.trim() !== '') {
-        const urlRegex = /^https?:\/\/.+/;
-        if (!urlRegex.test(data.website)) {
-            alert('Please enter a valid website URL (starting with http:// or https://)');
-            return false;
-        }
-    }
-    
-    return true;
 }
 
 function showSuccessMessage() {
     const successMessage = document.getElementById('successMessage');
-    successMessage.classList.add('active');
+    if (successMessage) {
+        successMessage.classList.add('active');
+        
+        setTimeout(() => {
+            successMessage.classList.remove('active');
+        }, 5000);
+    }
+}
+
+// ================================
+// UI HELPER FUNCTIONS
+// ================================
+function showLoading() {
+    const loading = document.getElementById('loading');
+    if (loading) {
+        loading.classList.add('active');
+    }
     
+    const resultsGrid = document.getElementById('resultsGrid');
+    if (resultsGrid) {
+        resultsGrid.style.display = 'none';
+    }
+    
+    const noResults = document.getElementById('noResults');
+    if (noResults) {
+        noResults.classList.remove('active');
+    }
+}
+
+function hideLoading() {
+    const loading = document.getElementById('loading');
+    if (loading) {
+        loading.classList.remove('active');
+    }
+}
+
+function showNoResults() {
+    const noResults = document.getElementById('noResults');
+    if (noResults) {
+        noResults.classList.add('active');
+    }
+}
+
+function showToast(message, type = 'info') {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#22c55e'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Remove after 4 seconds
     setTimeout(() => {
-        successMessage.classList.remove('active');
-    }, 5000);
+        toast.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
 }
 
 // ================================
 // UTILITY FUNCTIONS
 // ================================
-function showLoading() {
-    document.getElementById('loading').classList.add('active');
-    document.getElementById('resultsGrid').style.display = 'none';
-    document.getElementById('noResults').classList.remove('active');
-}
-
-function hideLoading() {
-    document.getElementById('loading').classList.remove('active');
-}
-
 function formatDate(dateString) {
     const date = new Date(dateString);
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -569,6 +502,7 @@ function formatDate(dateString) {
 }
 
 function formatTime(timeString) {
+    if (!timeString) return '';
     const [hours, minutes] = timeString.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -577,6 +511,7 @@ function formatTime(timeString) {
 }
 
 function escapeHtml(text) {
+    if (!text) return '';
     const map = {
         '&': '&amp;',
         '<': '&lt;',
@@ -584,7 +519,7 @@ function escapeHtml(text) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return text.replace(/[&<>"']/g, m => map[m]);
+    return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
 function contactVenue(email) {
@@ -593,4 +528,46 @@ function contactVenue(email) {
 
 function visitWebsite(url) {
     window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+// ================================
+// CSS ANIMATIONS (Add to style.css)
+// ================================
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// ================================
+// EXPORT FOR TESTING
+// ================================
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        loadEvents,
+        createEvent,
+        formatDate,
+        formatTime,
+        escapeHtml,
+    };
 }
