@@ -226,6 +226,9 @@ const mockEvents = [
     }
 ];
 
+// Make mockEvents available globally for Firebase integration
+window.mockEvents = mockEvents;
+
 // ================================
 // GLOBAL STATE
 // ================================
@@ -238,39 +241,13 @@ let filteredEvents = [];
 document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
     setupEventListeners();
-    loadEventsFromStorage();
     performInitialSearch();
 });
 
 function initializeApp() {
-    // Merge mock data with any stored events
-    const storedEvents = getStoredEvents();
-    allEvents = [...mockEvents, ...storedEvents];
+    // Start with mock data, Firebase will merge its data when loaded
+    allEvents = [...mockEvents];
     filteredEvents = [...allEvents];
-}
-
-// ================================
-// LOCAL STORAGE MANAGEMENT
-// ================================
-function getStoredEvents() {
-    const stored = localStorage.getItem('customEvents');
-    return stored ? JSON.parse(stored) : [];
-}
-
-function saveEventToStorage(event) {
-    const stored = getStoredEvents();
-    const newEvent = {
-        ...event,
-        id: Date.now() // Generate unique ID
-    };
-    stored.push(newEvent);
-    localStorage.setItem('customEvents', JSON.stringify(stored));
-    return newEvent;
-}
-
-function loadEventsFromStorage() {
-    const storedEvents = getStoredEvents();
-    allEvents = [...mockEvents, ...storedEvents];
 }
 
 // ================================
@@ -325,7 +302,7 @@ function setupEventListeners() {
         clearFiltersBtn.addEventListener('click', clearFiltersOnly);
     }
     
-    // Form submission
+    // Form submission - now with Firebase
     const submitForm = document.getElementById('submitForm');
     submitForm.addEventListener('submit', handleFormSubmit);
     
@@ -347,10 +324,39 @@ function setupNavigation() {
     navLinksElements.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            const targetId = link.getAttribute('href');
-            const targetSection = document.querySelector(targetId);
+            const targetId = link.getAttribute('href').substring(1); // Remove #
+            
+            // Handle dashboard special case
+            if (targetId === 'dashboard') {
+                if (!window.currentUser) {
+                    window.showToast('Please login to view dashboard', 'error');
+                    window.showAuthModal();
+                    return;
+                }
+                // Show dashboard and load data
+                showDashboardPage();
+                return;
+            }
+            
+            const targetSection = document.getElementById(targetId);
             
             if (targetSection) {
+                // Hide all sections
+                document.querySelectorAll('section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                
+                // Show target section
+                if (targetId === 'home') {
+                    targetSection.style.display = 'flex';
+                    // Also show other main sections
+                    document.getElementById('submit').style.display = 'block';
+                    document.getElementById('about').style.display = 'block';
+                    document.getElementById('contact').style.display = 'block';
+                } else {
+                    targetSection.style.display = 'block';
+                }
+                
                 targetSection.scrollIntoView({ behavior: 'smooth' });
                 
                 // Update active state
@@ -387,6 +393,28 @@ function setupNavigation() {
 }
 
 // ================================
+// DASHBOARD PAGE
+// ================================
+function showDashboardPage() {
+    // Hide all sections
+    document.querySelectorAll('section').forEach(section => {
+        section.style.display = 'none';
+    });
+    
+    // Show dashboard
+    const dashboardSection = document.getElementById('dashboard');
+    dashboardSection.style.display = 'block';
+    
+    // Load dashboard data
+    if (window.loadUserDashboard) {
+        window.loadUserDashboard();
+    }
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ================================
 // PAGE NAVIGATION
 // ================================
 function showResultsPage(searchTerm) {
@@ -398,6 +426,7 @@ function showResultsPage(searchTerm) {
     document.getElementById('submit').style.display = 'none';
     document.getElementById('about').style.display = 'none';
     document.getElementById('contact').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'none';
     
     // Show results page
     const searchPage = document.getElementById('search');
@@ -413,15 +442,16 @@ function showResultsPage(searchTerm) {
     setTimeout(() => performSearch(), 100);
 }
 
-function backToHome() {
+window.backToHome = function() {
     // Show home sections
     document.getElementById('home').style.display = 'flex';
     document.getElementById('submit').style.display = 'block';
     document.getElementById('about').style.display = 'block';
     document.getElementById('contact').style.display = 'block';
     
-    // Hide results page
+    // Hide other sections
     document.getElementById('search').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'none';
     
     // Clear search
     document.getElementById('heroSearchInput').value = '';
@@ -432,7 +462,7 @@ function backToHome() {
     
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+};
 
 function updateSearchSummary(searchTerm) {
     const summaryText = document.getElementById('searchSummaryText');
@@ -455,7 +485,7 @@ function performInitialSearch() {
     hideLoading();
 }
 
-function performSearch() {
+window.performSearch = function() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const typeFilter = document.getElementById('typeFilter').value;
     const genreFilter = document.getElementById('genreFilter').value;
@@ -497,264 +527,7 @@ function performSearch() {
         hideLoading();
         renderEvents(filteredEvents);
     }, 800);
-}
+};
 
 function updateResultsHeader(count, searchTerm, typeFilter, genreFilter) {
     const resultsHeader = document.getElementById('resultsHeader');
-    const resultsCount = document.getElementById('resultsCount');
-    const clearFiltersBtn = document.getElementById('clearFilters');
-    
-    if (count > 0) {
-        resultsHeader.style.display = 'flex';
-        resultsCount.textContent = `${count} event${count !== 1 ? 's' : ''} found`;
-        
-        // Show clear filters button if any filters are active
-        if (searchTerm || typeFilter || genreFilter) {
-            clearFiltersBtn.style.display = 'block';
-        } else {
-            clearFiltersBtn.style.display = 'none';
-        }
-    } else {
-        resultsHeader.style.display = 'none';
-    }
-}
-
-function clearSearch() {
-    // Go back to home page
-    backToHome();
-}
-
-function clearFiltersOnly() {
-    // Clear filters but stay on results page
-    document.getElementById('typeFilter').value = '';
-    document.getElementById('genreFilter').value = '';
-    document.getElementById('sortFilter').value = 'date';
-    
-    // Re-run search with just the search term
-    performSearch();
-}
-
-// Quick search function for suggestion tags
-function quickSearch(term) {
-    document.getElementById('heroSearchInput').value = term;
-    showResultsPage(term);
-}
-
-function sortEvents(events, sortOption) {
-    switch(sortOption) {
-        case 'name':
-            events.sort((a, b) => a.name.localeCompare(b.name));
-            break;
-        case 'city':
-            events.sort((a, b) => a.city.localeCompare(b.city));
-            break;
-        case 'date':
-        default:
-            events.sort((a, b) => new Date(a.date) - new Date(b.date));
-            break;
-    }
-}
-
-// ================================
-// EVENT RENDERING
-// ================================
-function renderEvents(events) {
-    const resultsGrid = document.getElementById('resultsGrid');
-    const noResults = document.getElementById('noResults');
-    
-    resultsGrid.innerHTML = '';
-    
-    if (events.length === 0) {
-        resultsGrid.style.display = 'none';
-        noResults.classList.add('active');
-        return;
-    }
-    
-    noResults.classList.remove('active');
-    resultsGrid.style.display = 'grid';
-    
-    events.forEach(event => {
-        const card = createEventCard(event);
-        resultsGrid.appendChild(card);
-    });
-}
-
-function createEventCard(event) {
-    const card = document.createElement('div');
-    card.className = 'event-card';
-    
-    const formattedDate = formatDate(event.date);
-    const formattedTime = formatTime(event.time);
-    
-    card.innerHTML = `
-        <div class="event-header">
-            <h3 class="event-name">${escapeHtml(event.name)}</h3>
-            <p class="event-location">📍 ${escapeHtml(event.city)}, ${escapeHtml(event.state)}</p>
-        </div>
-        
-        <div class="event-meta">
-            <span class="tag tag-type">${escapeHtml(event.type)}</span>
-            <span class="tag tag-genre">${escapeHtml(event.genre)}</span>
-        </div>
-        
-        <p class="event-date">🗓 ${formattedDate} at ${formattedTime}</p>
-        
-        <p class="event-description">${escapeHtml(event.description)}</p>
-        
-        <div class="event-contact">
-            <div>📧 <a href="mailto:${escapeHtml(event.email)}">${escapeHtml(event.email)}</a></div>
-            ${event.phone ? `<div>📞 ${escapeHtml(event.phone)}</div>` : ''}
-        </div>
-        
-        <div class="event-actions">
-            <button class="btn btn-secondary btn-small" onclick="contactVenue('${escapeHtml(event.email)}')">
-                Contact Venue
-            </button>
-            ${event.website ? `
-                <button class="btn btn-primary btn-small" onclick="visitWebsite('${escapeHtml(event.website)}')">
-                    Visit Website
-                </button>
-            ` : ''}
-        </div>
-    `;
-    
-    return card;
-}
-
-// ================================
-// FORM HANDLING
-// ================================
-function handleFormSubmit(e) {
-    e.preventDefault();
-    
-    const formData = {
-        name: document.getElementById('eventName').value,
-        venue_name: document.getElementById('eventName').value, // Using event name as venue temporarily
-        city: document.getElementById('city').value,
-        state: document.getElementById('state').value,
-        date: document.getElementById('eventDate').value,
-        time: document.getElementById('eventTime').value,
-        type: document.getElementById('eventType').value,
-        genre: document.getElementById('eventGenre').value,
-        email: document.getElementById('email').value,
-        phone: document.getElementById('phone').value,
-        website: document.getElementById('website').value,
-        description: document.getElementById('description').value
-    };
-    
-    // Validate form
-    if (!validateForm(formData)) {
-        return;
-    }
-    
-    // Save to storage
-    const newEvent = saveEventToStorage(formData);
-    
-    // Add to current events array
-    allEvents.push(newEvent);
-    
-    // Show success message
-    showSuccessMessage();
-    
-    // Reset form
-    document.getElementById('submitForm').reset();
-    
-    // Refresh search results
-    performSearch();
-}
-
-function validateForm(data) {
-    // Check required fields
-    const requiredFields = ['name', 'city', 'state', 'date', 'time', 'type', 'genre', 'email', 'description'];
-    
-    for (let field of requiredFields) {
-        if (!data[field] || data[field].trim() === '') {
-            alert(`Please fill in the ${field} field`);
-            return false;
-        }
-    }
-    
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.email)) {
-        alert('Please enter a valid email address');
-        return false;
-    }
-    
-    // Validate website if provided
-    if (data.website && data.website.trim() !== '') {
-        const urlRegex = /^https?:\/\/.+/;
-        if (!urlRegex.test(data.website)) {
-            alert('Please enter a valid website URL (starting with http:// or https://)');
-            return false;
-        }
-    }
-    
-    return true;
-}
-
-function showSuccessMessage() {
-    const successMessage = document.getElementById('successMessage');
-    successMessage.classList.add('active');
-    
-    setTimeout(() => {
-        successMessage.classList.remove('active');
-    }, 5000);
-}
-
-// ================================
-// UTILITY FUNCTIONS
-// ================================
-function showLoading() {
-    document.getElementById('loading').classList.add('active');
-    document.getElementById('resultsGrid').style.display = 'none';
-    document.getElementById('noResults').classList.remove('active');
-    const emptyState = document.getElementById('emptyState');
-    if (emptyState) emptyState.classList.remove('active');
-}
-
-function hideLoading() {
-    document.getElementById('loading').classList.remove('active');
-}
-
-function showEmptyState() {
-    const emptyState = document.getElementById('emptyState');
-    if (emptyState) {
-        emptyState.classList.add('active');
-    }
-    document.getElementById('resultsGrid').style.display = 'none';
-    document.getElementById('noResults').classList.remove('active');
-}
-
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    return date.toLocaleDateString('en-US', options);
-}
-
-function formatTime(timeString) {
-    const [hours, minutes] = timeString.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
-}
-
-function escapeHtml(text) {
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return text.replace(/[&<>"']/g, m => map[m]);
-}
-
-function contactVenue(email) {
-    window.location.href = `mailto:${email}`;
-}
-
-function visitWebsite(url) {
-    window.open(url, '_blank', 'noopener,noreferrer');
-}
