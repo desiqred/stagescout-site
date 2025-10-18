@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Local Gig Finder - Connect Musicians with Venues</title>
+    <title>StageScout - Find Local Music Events</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -34,71 +34,131 @@
         <div class="hero-content">
             <h1>Find Local Gigs & Open Mics</h1>
             <p>Connecting musicians with venues and opportunities to showcase their talent</p>
-            <button class="btn btn-primary" onclick="document.getElementById('search').scrollIntoView({behavior: 'smooth'})">
-                Start Searching
-            </button>
-        </div>
-    </section>
-
-    <!-- Search Section -->
-    <section id="search" class="search-section">
-        <div class="search-container">
-            <div class="search-bar">
+            
+            <!-- Hero Search Bar -->
+            <div class="hero-search">
                 <input 
                     type="text" 
-                    class="search-input" 
-                    id="searchInput" 
+                    class="hero-search-input" 
+                    id="heroSearchInput" 
                     placeholder="Search by city, genre, or event name..."
                     aria-label="Search events"
                 >
-                <button class="btn btn-primary" id="searchBtn">Search</button>
+                <button class="btn btn-primary btn-large" id="heroSearchBtn">
+                    🔍 Search Events
+                </button>
+            </div>
+            
+            <div class="hero-quick-filters">
+                <button class="quick-filter-btn" data-search="New Orleans">New Orleans</button>
+                <button class="quick-filter-btn" data-search="Jazz">Jazz</button>
+                <button class="quick-filter-btn" data-search="Open Mic">Open Mic</button>
+                <button class="quick-filter-btn" data-search="Nashville">Nashville</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search Results Page (Hidden until search) -->
+    <section id="search" class="search-results-page" style="display: none;">
+        <div class="search-results-container">
+            <!-- Back to Home Button -->
+            <button class="btn-back" onclick="backToHome()">
+                ← Back to Search
+            </button>
+
+            <!-- Search Summary Bar -->
+            <div class="search-summary">
+                <div class="search-summary-left">
+                    <h2 id="searchSummaryText">Search Results</h2>
+                    <p class="search-term-display" id="searchTermDisplay"></p>
+                </div>
+                <button class="btn-new-search" onclick="backToHome()">
+                    New Search
+                </button>
             </div>
 
-            <div class="filters">
-                <div class="filter-group">
-                    <label for="typeFilter">Event Type</label>
-                    <select id="typeFilter" aria-label="Filter by event type">
-                        <option value="">All Types</option>
-                        <option value="Open Mic">Open Mic</option>
-                        <option value="Gig Night">Gig Night</option>
-                        <option value="Jam Session">Jam Session</option>
-                        <option value="Showcase">Showcase</option>
-                    </select>
-                </div>
+            <!-- Filter Pills -->
+            <div class="filter-container">
+                <h3 class="filter-title">Refine Results</h3>
+                
+                <div class="filter-pills">
+                    <div class="filter-pill-group">
+                        <label class="filter-pill-label">🎭 Type</label>
+                        <select id="typeFilter" class="filter-pill-select" aria-label="Filter by event type">
+                            <option value="">All Types</option>
+                            <option value="Open Mic">Open Mic</option>
+                            <option value="Gig Night">Gig Night</option>
+                            <option value="Jam Session">Jam Session</option>
+                            <option value="Showcase">Showcase</option>
+                        </select>
+                    </div>
 
-                <div class="filter-group">
-                    <label for="genreFilter">Genre</label>
-                    <select id="genreFilter" aria-label="Filter by genre">
-                        <option value="">All Genres</option>
-                        <option value="Rock">Rock</option>
-                        <option value="Jazz">Jazz</option>
-                        <option value="Acoustic">Acoustic</option>
-                        <option value="Pop">Pop</option>
-                        <option value="Country">Country</option>
-                        <option value="Hip-Hop">Hip-Hop</option>
-                    </select>
-                </div>
+                    <div class="filter-pill-group">
+                        <label class="filter-pill-label">🎸 Genre</label>
+                        <select id="genreFilter" class="filter-pill-select" aria-label="Filter by genre">
+                            <option value="">All Genres</option>
+                            <option value="Rock">Rock</option>
+                            <option value="Jazz">Jazz</option>
+                            <option value="Acoustic">Acoustic</option>
+                            <option value="Pop">Pop</option>
+                            <option value="Country">Country</option>
+                            <option value="Hip-Hop">Hip-Hop</option>
+                        </select>
+                    </div>
 
-                <div class="filter-group">
-                    <label for="sortFilter">Sort By</label>
-                    <select id="sortFilter" aria-label="Sort results">
-                        <option value="date">Date</option>
-                        <option value="name">A-Z</option>
-                        <option value="city">City</option>
-                    </select>
+                    <div class="filter-pill-group">
+                        <label class="filter-pill-label">🔄 Sort</label>
+                        <select id="sortFilter" class="filter-pill-select" aria-label="Sort results">
+                            <option value="date">By Date</option>
+                            <option value="name">A-Z</option>
+                            <option value="city">By City</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hidden input for storing search term -->
+            <input type="hidden" id="searchInput">
+
+        <!-- Empty State (shown before first search) -->
+        <div class="empty-state" id="emptyState">
+            <div class="empty-state-icon">🎤</div>
+            <h3>Ready to Find Your Next Gig?</h3>
+            <p>Use the search bar above to discover music events in your area</p>
+            <div class="empty-state-suggestions">
+                <p class="suggestions-label">Try searching for:</p>
+                <div class="suggestion-tags">
+                    <span class="suggestion-tag" onclick="quickSearch('jazz')">Jazz Events</span>
+                    <span class="suggestion-tag" onclick="quickSearch('open mic')">Open Mics</span>
+                    <span class="suggestion-tag" onclick="quickSearch('Nashville')">Nashville</span>
+                    <span class="suggestion-tag" onclick="quickSearch('rock')">Rock Shows</span>
                 </div>
             </div>
         </div>
 
+        <!-- Loading Animation -->
         <div class="loading" id="loading">
-            <p class="loading-text">🎵 Searching venues...</p>
+            <div class="loading-spinner"></div>
+            <p class="loading-text">🎵 Finding events...</p>
         </div>
 
+        <!-- Results Header -->
+        <div class="results-header" id="resultsHeader" style="display: none;">
+            <h3 class="results-count" id="resultsCount"></h3>
+            <button class="btn-clear-filters" id="clearFilters" style="display: none;">
+                ✕ Clear Filters
+            </button>
+        </div>
+
+        <!-- Results Grid -->
         <div class="results-grid" id="resultsGrid"></div>
 
+        <!-- No Results -->
         <div class="no-results" id="noResults">
-            <h3>🎭 No events found in your area</h3>
+            <div class="no-results-icon">🎭</div>
+            <h3>No events found</h3>
             <p>Try adjusting your search or filters</p>
+            <button class="btn btn-secondary" onclick="clearSearch()">Clear Search</button>
         </div>
     </section>
 
@@ -215,7 +275,7 @@
             </p>
 
             <div class="social-links">
-                <a href="mailto:info@StageScout.com">📧 Email Us</a>
+                <a href="mailto:info@stagescout.live">📧 Email Us</a>
                 <a href="#" target="_blank">📷 Instagram</a>
                 <a href="#" target="_blank">🎥 YouTube</a>
             </div>
@@ -244,7 +304,7 @@
     <footer>
         <div class="footer-content">
             <a href="#home" class="back-to-top">↑ Back to Top</a>
-            <p class="copyright">© 2025 Local Gig Finder. All rights reserved.</p>
+            <p class="copyright">© 2025 StageScout. All rights reserved.</p>
         </div>
     </footer>
 

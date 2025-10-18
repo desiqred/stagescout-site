@@ -283,21 +283,50 @@ function setupEventListeners() {
     // Navigation
     setupNavigation();
     
-    // Search functionality
-    const searchBtn = document.getElementById('searchBtn');
-    const searchInput = document.getElementById('searchInput');
+    // Hero search (main search)
+    const heroSearchBtn = document.getElementById('heroSearchBtn');
+    const heroSearchInput = document.getElementById('heroSearchInput');
+    
+    if (heroSearchBtn) {
+        heroSearchBtn.addEventListener('click', () => {
+            const searchTerm = heroSearchInput.value;
+            showResultsPage(searchTerm);
+        });
+    }
+    
+    if (heroSearchInput) {
+        heroSearchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const searchTerm = heroSearchInput.value;
+                showResultsPage(searchTerm);
+            }
+        });
+    }
+    
+    // Quick filter buttons
+    const quickFilterBtns = document.querySelectorAll('.quick-filter-btn');
+    quickFilterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const searchTerm = btn.getAttribute('data-search');
+            heroSearchInput.value = searchTerm;
+            showResultsPage(searchTerm);
+        });
+    });
+    
+    // Filter changes trigger search
     const typeFilter = document.getElementById('typeFilter');
     const genreFilter = document.getElementById('genreFilter');
     const sortFilter = document.getElementById('sortFilter');
     
-    searchBtn.addEventListener('click', performSearch);
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') performSearch();
-    });
-    
     typeFilter.addEventListener('change', performSearch);
     genreFilter.addEventListener('change', performSearch);
     sortFilter.addEventListener('change', performSearch);
+    
+    // Clear filters button
+    const clearFiltersBtn = document.getElementById('clearFilters');
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', clearFiltersOnly);
+    }
     
     // Form submission
     const submitForm = document.getElementById('submitForm');
@@ -361,11 +390,72 @@ function setupNavigation() {
 }
 
 // ================================
+// PAGE NAVIGATION
+// ================================
+function showResultsPage(searchTerm) {
+    // Store search term
+    document.getElementById('searchInput').value = searchTerm;
+    
+    // Hide home sections
+    document.getElementById('home').style.display = 'none';
+    document.getElementById('submit').style.display = 'none';
+    document.getElementById('about').style.display = 'none';
+    document.getElementById('contact').style.display = 'none';
+    
+    // Show results page
+    const searchPage = document.getElementById('search');
+    searchPage.style.display = 'block';
+    
+    // Update search summary
+    updateSearchSummary(searchTerm);
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Perform search
+    setTimeout(() => performSearch(), 100);
+}
+
+function backToHome() {
+    // Show home sections
+    document.getElementById('home').style.display = 'flex';
+    document.getElementById('submit').style.display = 'block';
+    document.getElementById('about').style.display = 'block';
+    document.getElementById('contact').style.display = 'block';
+    
+    // Hide results page
+    document.getElementById('search').style.display = 'none';
+    
+    // Clear search
+    document.getElementById('heroSearchInput').value = '';
+    document.getElementById('searchInput').value = '';
+    document.getElementById('typeFilter').value = '';
+    document.getElementById('genreFilter').value = '';
+    document.getElementById('sortFilter').value = 'date';
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateSearchSummary(searchTerm) {
+    const summaryText = document.getElementById('searchSummaryText');
+    const termDisplay = document.getElementById('searchTermDisplay');
+    
+    if (searchTerm && searchTerm.trim() !== '') {
+        summaryText.textContent = 'Search Results';
+        termDisplay.textContent = `Showing results for "${searchTerm}"`;
+    } else {
+        summaryText.textContent = 'All Events';
+        termDisplay.textContent = 'Browse all available events';
+    }
+}
+
+// ================================
 // SEARCH & FILTER FUNCTIONS
 // ================================
 function performInitialSearch() {
-    // Show all events on load
-    renderEvents(allEvents);
+    // Don't show events on load - wait for user to search
+    hideLoading();
 }
 
 function performSearch() {
@@ -373,6 +463,12 @@ function performSearch() {
     const typeFilter = document.getElementById('typeFilter').value;
     const genreFilter = document.getElementById('genreFilter').value;
     const sortOption = document.getElementById('sortFilter').value;
+    
+    // Hide empty state
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) {
+        emptyState.classList.remove('active');
+    }
     
     // Show loading animation
     showLoading();
@@ -397,10 +493,54 @@ function performSearch() {
         // Sort events
         sortEvents(filteredEvents, sortOption);
         
+        // Update results header
+        updateResultsHeader(filteredEvents.length, searchTerm, typeFilter, genreFilter);
+        
         // Render results
         hideLoading();
         renderEvents(filteredEvents);
     }, 800);
+}
+
+function updateResultsHeader(count, searchTerm, typeFilter, genreFilter) {
+    const resultsHeader = document.getElementById('resultsHeader');
+    const resultsCount = document.getElementById('resultsCount');
+    const clearFiltersBtn = document.getElementById('clearFilters');
+    
+    if (count > 0) {
+        resultsHeader.style.display = 'flex';
+        resultsCount.textContent = `${count} event${count !== 1 ? 's' : ''} found`;
+        
+        // Show clear filters button if any filters are active
+        if (searchTerm || typeFilter || genreFilter) {
+            clearFiltersBtn.style.display = 'block';
+        } else {
+            clearFiltersBtn.style.display = 'none';
+        }
+    } else {
+        resultsHeader.style.display = 'none';
+    }
+}
+
+function clearSearch() {
+    // Go back to home page
+    backToHome();
+}
+
+function clearFiltersOnly() {
+    // Clear filters but stay on results page
+    document.getElementById('typeFilter').value = '';
+    document.getElementById('genreFilter').value = '';
+    document.getElementById('sortFilter').value = 'date';
+    
+    // Re-run search with just the search term
+    performSearch();
+}
+
+// Quick search function for suggestion tags
+function quickSearch(term) {
+    document.getElementById('heroSearchInput').value = term;
+    showResultsPage(term);
 }
 
 function sortEvents(events, sortOption) {
@@ -572,10 +712,21 @@ function showLoading() {
     document.getElementById('loading').classList.add('active');
     document.getElementById('resultsGrid').style.display = 'none';
     document.getElementById('noResults').classList.remove('active');
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) emptyState.classList.remove('active');
 }
 
 function hideLoading() {
     document.getElementById('loading').classList.remove('active');
+}
+
+function showEmptyState() {
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) {
+        emptyState.classList.add('active');
+    }
+    document.getElementById('resultsGrid').style.display = 'none';
+    document.getElementById('noResults').classList.remove('active');
 }
 
 function formatDate(dateString) {
