@@ -242,6 +242,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
     setupEventListeners();
     performInitialSearch();
+    
+    // Setup login/signup button
+    const loginSignupBtn = document.getElementById('loginSignupBtn');
+    if (loginSignupBtn) {
+        loginSignupBtn.addEventListener('click', () => {
+            document.getElementById('authModal').classList.add('active');
+        });
+    }
 });
 
 function initializeApp() {
@@ -531,3 +539,300 @@ window.performSearch = function() {
 
 function updateResultsHeader(count, searchTerm, typeFilter, genreFilter) {
     const resultsHeader = document.getElementById('resultsHeader');
+    const resultsCount = document.getElementById('resultsCount');
+    const clearFiltersBtn = document.getElementById('clearFilters');
+    
+    if (count > 0) {
+        resultsHeader.style.display = 'flex';
+        resultsCount.textContent = `${count} event${count !== 1 ? 's' : ''} found`;
+        
+        // Show clear filters button if any filters are active
+        if (searchTerm || typeFilter || genreFilter) {
+            clearFiltersBtn.style.display = 'block';
+        } else {
+            clearFiltersBtn.style.display = 'none';
+        }
+    } else {
+        resultsHeader.style.display = 'none';
+    }
+}
+
+window.clearSearch = function() {
+    // Go back to home page
+    backToHome();
+};
+
+function clearFiltersOnly() {
+    // Clear filters but stay on results page
+    document.getElementById('typeFilter').value = '';
+    document.getElementById('genreFilter').value = '';
+    document.getElementById('sortFilter').value = 'date';
+    
+    // Re-run search with just the search term
+    performSearch();
+}
+
+// Quick search function for suggestion tags
+window.quickSearch = function(term) {
+    document.getElementById('heroSearchInput').value = term;
+    showResultsPage(term);
+};
+
+function sortEvents(events, sortOption) {
+    switch(sortOption) {
+        case 'name':
+            events.sort((a, b) => a.name.localeCompare(b.name));
+            break;
+        case 'city':
+            events.sort((a, b) => a.city.localeCompare(b.city));
+            break;
+        case 'date':
+        default:
+            events.sort((a, b) => new Date(a.date) - new Date(b.date));
+            break;
+    }
+}
+
+// ================================
+// EVENT RENDERING
+// ================================
+function renderEvents(events) {
+    const resultsGrid = document.getElementById('resultsGrid');
+    const noResults = document.getElementById('noResults');
+    
+    resultsGrid.innerHTML = '';
+    
+    if (events.length === 0) {
+        resultsGrid.style.display = 'none';
+        noResults.classList.add('active');
+        return;
+    }
+    
+    noResults.classList.remove('active');
+    resultsGrid.style.display = 'grid';
+    
+    events.forEach(event => {
+        const card = createEventCard(event);
+        resultsGrid.appendChild(card);
+    });
+}
+
+function createEventCard(event) {
+    const card = document.createElement('div');
+    card.className = 'event-card';
+    
+    const formattedDate = formatDate(event.date);
+    const formattedTime = formatTime(event.time);
+    
+    card.innerHTML = `
+        <div class="event-header">
+            <h3 class="event-name">${escapeHtml(event.name)}</h3>
+            <p class="event-location">📍 ${escapeHtml(event.city)}, ${escapeHtml(event.state)}</p>
+        </div>
+        
+        <div class="event-meta">
+            <span class="tag tag-type">${escapeHtml(event.type)}</span>
+            <span class="tag tag-genre">${escapeHtml(event.genre)}</span>
+        </div>
+        
+        <p class="event-date">🗓 ${formattedDate} at ${formattedTime}</p>
+        
+        <p class="event-description">${escapeHtml(event.description)}</p>
+        
+        <div class="event-contact">
+            <div>📧 <a href="mailto:${escapeHtml(event.email)}">${escapeHtml(event.email)}</a></div>
+            ${event.phone ? `<div>📞 ${escapeHtml(event.phone)}</div>` : ''}
+        </div>
+        
+        <div class="event-actions">
+            <button class="btn btn-secondary btn-small" onclick="contactVenue('${escapeHtml(event.email)}')">
+                Contact Venue
+            </button>
+            ${event.website ? `
+                <button class="btn btn-primary btn-small" onclick="visitWebsite('${escapeHtml(event.website)}')">
+                    Visit Website
+                </button>
+            ` : ''}
+        </div>
+    `;
+    
+    return card;
+}
+
+// ================================
+// FORM HANDLING - UPDATED FOR FIREBASE
+// ================================
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    
+    const formData = {
+        name: document.getElementById('eventName').value,
+        venue_name: document.getElementById('eventName').value,
+        city: document.getElementById('city').value,
+        state: document.getElementById('state').value,
+        date: document.getElementById('eventDate').value,
+        time: document.getElementById('eventTime').value,
+        type: document.getElementById('eventType').value,
+        genre: document.getElementById('eventGenre').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        website: document.getElementById('website').value,
+        description: document.getElementById('description').value
+    };
+    
+    // Validate form
+    if (!validateForm(formData)) {
+        return;
+    }
+    
+    // Check if user is logged in
+    if (!window.currentUser) {
+        if (window.showToast) {
+            window.showToast('Please login to submit events', 'error');
+        }
+        if (window.showAuthModal) {
+            window.showAuthModal();
+        }
+        return;
+    }
+    
+    // Submit to Firebase
+    if (window.submitEventToFirebase) {
+        const success = await window.submitEventToFirebase(formData);
+        
+        if (success) {
+            // Show success message
+            showSuccessMessage();
+            
+            // Reset form
+            document.getElementById('submitForm').reset();
+            
+            // Refresh events display
+            if (window.performSearch) {
+                window.performSearch();
+            }
+        }
+    } else {
+        // Fallback to localStorage if Firebase not loaded
+        const newEvent = saveEventToStorage(formData);
+        allEvents.push(newEvent);
+        showSuccessMessage();
+        document.getElementById('submitForm').reset();
+        performSearch();
+    }
+}
+
+function validateForm(data) {
+    // Check required fields
+    const requiredFields = ['name', 'city', 'state', 'date', 'time', 'type', 'genre', 'email', 'description'];
+    
+    for (let field of requiredFields) {
+        if (!data[field] || data[field].trim() === '') {
+            alert(`Please fill in the ${field} field`);
+            return false;
+        }
+    }
+    
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+        alert('Please enter a valid email address');
+        return false;
+    }
+    
+    // Validate website if provided
+    if (data.website && data.website.trim() !== '') {
+        const urlRegex = /^https?:\/\/.+/;
+        if (!urlRegex.test(data.website)) {
+            alert('Please enter a valid website URL (starting with http:// or https://)');
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+function showSuccessMessage() {
+    const successMessage = document.getElementById('successMessage');
+    successMessage.classList.add('active');
+    
+    setTimeout(() => {
+        successMessage.classList.remove('active');
+    }, 5000);
+}
+
+// ================================
+// LOCAL STORAGE (FALLBACK)
+// ================================
+function getStoredEvents() {
+    const stored = localStorage.getItem('customEvents');
+    return stored ? JSON.parse(stored) : [];
+}
+
+function saveEventToStorage(event) {
+    const stored = getStoredEvents();
+    const newEvent = {
+        ...event,
+        id: Date.now()
+    };
+    stored.push(newEvent);
+    localStorage.setItem('customEvents', JSON.stringify(stored));
+    return newEvent;
+}
+
+// ================================
+// UTILITY FUNCTIONS
+// ================================
+function showLoading() {
+    document.getElementById('loading').classList.add('active');
+    document.getElementById('resultsGrid').style.display = 'none';
+    document.getElementById('noResults').classList.remove('active');
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) emptyState.classList.remove('active');
+}
+
+function hideLoading() {
+    document.getElementById('loading').classList.remove('active');
+}
+
+function showEmptyState() {
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) {
+        emptyState.classList.add('active');
+    }
+    document.getElementById('resultsGrid').style.display = 'none';
+    document.getElementById('noResults').classList.remove('active');
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+}
+
+function formatTime(timeString) {
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function contactVenue(email) {
+    window.location.href = `mailto:${email}`;
+}
+
+function visitWebsite(url) {
+    window.open(url, '_blank', 'noopener,noreferrer');
+}
