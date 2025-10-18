@@ -38,6 +38,7 @@
             box-shadow: 0 20px 60px rgba(147, 51, 234, 0.5);
             border: 1px solid rgba(147, 51, 234, 0.3);
             animation: slideUp 0.4s ease-out;
+            position: relative;
         }
 
         .auth-header {
@@ -235,6 +236,14 @@
     <!-- Auth Modal -->
     <div id="authModal" class="auth-modal">
         <div class="auth-container">
+            <button 
+                onclick="document.getElementById('authModal').classList.remove('active')" 
+                style="position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer; padding: 0.5rem; transition: color 0.3s ease;"
+                onmouseover="this.style.color='var(--text-light)'"
+                onmouseout="this.style.color='var(--text-dim)'"
+            >
+                ✕
+            </button>
             <div class="auth-header">
                 <h2>🎸 Welcome to StageScout</h2>
                 <p style="color: var(--text-dim);">Connect with local music opportunities</p>
@@ -303,7 +312,7 @@
             </ul>
             <!-- Guest Navigation -->
             <div class="guest-nav" id="guestNav">
-                <button class="btn-login" onclick="showAuthModal()">Login / Sign Up</button>
+                <button class="btn-login" id="loginSignupBtn">Login / Sign Up</button>
             </div>
             <!-- User Navigation -->
             <div class="user-nav" id="userNav">
