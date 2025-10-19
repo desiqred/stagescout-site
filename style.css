@@ -21,6 +21,11 @@ body {
     color: var(--text-light);
     line-height: 1.6;
     min-height: 100vh;
+    overflow-x: hidden;
+}
+
+html {
+    overflow-x: hidden;
 }
 
 /* Navigation - UPDATED */
